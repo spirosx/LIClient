@@ -3,10 +3,15 @@ package com.vmware.loginisght.send;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.productivity.java.syslog4j.Syslog;
+import org.productivity.java.syslog4j.SyslogIF;
+//import org.productivity.java.syslog4j.impl.message.structured.StructuredSyslogMessage;
+
 public class LogUploadClient {
 	public final String url;
 	public final int port;
 	public final LogInsigntProtocol proto;
+	private SyslogIF syslog = null;
 
 	public LogUploadClient(String url, int port, LogInsigntProtocol proto) {
 		this.url = url;
@@ -14,10 +19,29 @@ public class LogUploadClient {
 		this.proto = proto;
 		
 		assert (!proto.equals(LogInsigntProtocol.UNKNOWN));
+		
+		if (proto.equals(LogInsigntProtocol.SYSLOG_TCP)) {
+			syslog = Syslog.getInstance("tcp");
+		} else if (proto.equals(LogInsigntProtocol.SYSLOG_UDP)) {
+			syslog = Syslog.getInstance("udp");
+		} else {
+			System.err.println(proto + " not supported. Exiting...");
+			System.exit(1);
+		}
+		syslog.getConfig().setHost(url);
+		syslog.getConfig().setPort(port);
 	}
 	
 	private LogUploadClientReturnStatus sendMessageBySyslog(String msg, List<Field> fields, List<String> filters) {
-		return null;
+		//StructuredSyslogMessage ssm = new StructuredSyslogMessage("", null, "");
+		
+		try {
+			syslog.info(msg);
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			return LogUploadClientReturnStatus.FAIL;
+		}
+		return LogUploadClientReturnStatus.SUCCESS;
 	}
 	
 	private LogUploadClientReturnStatus sendMessageByHttp(String msg, List<Field> fields, List<String> filters) {
@@ -33,38 +57,6 @@ public class LogUploadClient {
 		} else {
 			return sendMessageByHttp(msg, fields, filters);
 		}	
-	}
-
-	public enum LogInsigntProtocol {
-		SYSLOG_TCP(1), SYSLOG_UDP(2), SYSLOG_TLS(3), HTTP(4),
-
-		UNKNOWN(0);
-
-		private int value;
-
-		private LogInsigntProtocol(int value) {
-			this.value = value;
-		}
-
-		public int getValue() {
-			return value;
-		}
-
-		public boolean isSyslog() {
-			return (this.equals(SYSLOG_TCP) || this.equals(SYSLOG_UDP) || this
-					.equals(SYSLOG_TLS));
-		}
-	}
-	
-	public enum LogUploadClientReturnStatus {
-		FAIL(-1),
-		SUCCESS(1);
-		
-		int value;
-		private LogUploadClientReturnStatus(int value) {
-			this.value = value;
-		}
-		
 	}
 
 	public static class Field {
