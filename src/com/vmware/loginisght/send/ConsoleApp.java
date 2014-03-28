@@ -19,9 +19,8 @@ public class ConsoleApp {
 		for (int i = 0; i < 10; i++) {
 			try {
 				Map<String, String> m = new HashMap<String, String>();
-				m.put("hostname", "android");
-				m.put("whoIsYourDaddy", "notBill");
-				sc.send("test " + String.valueOf(r.nextInt()) + " " + i + 10);
+				m.put("who", "me");
+				sc.send("test " + String.valueOf(r.nextInt()) + " " + i + 1000, LogLevel.INFO, m);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
